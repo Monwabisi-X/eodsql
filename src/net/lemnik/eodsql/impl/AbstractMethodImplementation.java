@@ -41,8 +41,14 @@ abstract class AbstractMethodImplementation<A extends Annotation>
         final Connection connection = context.getResource(Connection.class).get();
         final PreparedStatement statement = connection.prepareStatement(
                 query.toString(),
-                wrapper.getPreferredResultSetType(),
-                wrapper.getPreferredResultSetConcurrency());
+                /**
+                * CHANGED
+                */
+                // wrapper.getPreferredResultSetType(),
+                // wrapper.getPreferredResultSetConcurrency());
+                
+                ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY);
 
         context.setResource(new StatementResource(statement));
 
