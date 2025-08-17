@@ -48,7 +48,7 @@ abstract class AbstractMethodImplementation<A extends Annotation>
                 // wrapper.getPreferredResultSetType(),
                 // wrapper.getPreferredResultSetConcurrency());
                 
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
 
         context.setResource(new StatementResource(statement));
