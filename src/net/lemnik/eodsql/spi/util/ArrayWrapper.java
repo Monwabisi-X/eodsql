@@ -70,47 +70,23 @@ class ArrayWrapper extends AbstractResultSetWrapper<Object, Object> {
     private Object slowWrap(final ResultSet results) throws SQLException {
         useSlowWrap = true;
 
-        try {
-            if(!results.isBeforeFirst() && !results.isFirst()) {
-                try {
-                    results.beforeFirst();
-                } catch(final SQLException sqle) {
-                    throw new EoDException(
-                            "Something is very wrong with this ResultSet. " +
-                            "There may be a bug in your JDBC Driver. " +
-                            "The ResultSet does not support the " +
-                            "beforeFirst() command, and is reporting a " +
-                            "position that is not before " +
-                            "or on the first row.", sqle);
-                }
-            }
-        } catch(final SQLException sqle) {
-            throw new EoDException(
-                    "Something is very wrong with this " +
-                    "ResultSet. There may be a bug in your JDBC Driver. " +
-                    "The ResultSet cannot report whether it " +
-                    "is before or on the first row.", sqle);
-        }
-
-        // this is a lot like an ArrayList but works with a typed
-        // array instead of an array of Objects
+        // ✅ Remove beforeFirst() checks, just read forward
         final ExpandingArray array = new ExpandingArray();
-
-        if(!results.isBeforeFirst()) {
-            if(results.isFirst()) {
+    
+        // Try to read from the current row if already positioned
+        try {
+            if (results.isFirst()) {
                 array.add(binding.unmarshall(results));
-            } else {
-                throw new EoDException("Something is very wrong with this " +
-                        "ResultSet. There may be a bug in your JDBC Driver. " +
-                        "The ResultSet should either be on or before the" +
-                        " first row, but it is somewhere else.");
             }
+        } catch (SQLException ignore) {
+            // Some drivers don’t support isFirst(), so skip this check
         }
-
-        while(results.next()) {
+    
+        // Always consume forward
+        while (results.next()) {
             array.add(binding.unmarshall(results));
         }
-
+    
         return array.toArray();
     }
 
