@@ -454,19 +454,31 @@ class CollectionWrapperFactory implements ResultSetWrapper.Factory {
 
         @Override
         public int size() {
-            if(size == null) {
+            if (size == null) {
+                size = 0;
                 try {
-                    size = results.last()
-                            ? results.getRow()
-                            : Integer.valueOf(0);
-                } catch(final SQLException sqle) {
-                    throw new EoDException(sqle);
+                    // Save current row position if driver supports it
+                    boolean hasCurrentRow = false;
+                    try {
+                        hasCurrentRow = !results.isBeforeFirst() && !results.isAfterLast();
+                    } catch (SQLException ignore) {
+                        // Some drivers don't support isBeforeFirst/isAfterLast
+                    }
+        
+                    // Iterate forward to count rows
+                    while (results.next()) {
+                        size++;
+                    }
+        
+                    // Note: SQLite cannot rewind, so results will now be after last row
+                    // Any wrapper consuming results afterward must already have copied them
+                    // (like your patched slowWrap)
+                } catch (SQLException e) {
+                    throw new EoDException(e);
                 }
             }
-
-            return size != null
-                    ? size
-                    : 0;
+        
+            return size != null ? size : 0;
         }
 
     }
